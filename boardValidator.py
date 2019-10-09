@@ -34,7 +34,7 @@ class BoardValidator:
 							or self.attemptShipPlacement(workingBoard, shipArray, ship, i, j, 1)):
 							return True
 					# we found the first corner ship but nothing in the ship array could place it 
-					# and still be valid.  Will not be possible to place anything else
+					# and still be valid.  Will not be possible to place anything else and still eliminate this ship
 					return False
 		return False
 	def attemptShipPlacement(self, workingBoard, shipArray, ship, row, column, direction):

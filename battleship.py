@@ -54,7 +54,7 @@ if (not validator.validate()):
 	e.printSelfBoard()
 	quit()
 printPlayerView(p, e)
-while (e.activeShips > 0 and p.activeShips > 0):	
+while (e.activeShips > 0 and p.activeShips > 0):
 	result = None
 	while result == None:
 		try:

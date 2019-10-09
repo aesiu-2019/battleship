@@ -22,6 +22,7 @@ class PlayBoard:
 	battleshipSizes = [5, 4, 3, 3, 2]
 	rowCount = 10
 	colCount = 10
+
 	def __init__(self, sourceFile):
 		# the actual board of ships
 		self.board = []
