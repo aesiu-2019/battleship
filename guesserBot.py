@@ -1,11 +1,10 @@
 from playBoard import PlayBoard, Appearance
-from enemyBoard import BoardInterface
 from AbstractAI import AbstractAI
 from random import randint
 
 
 # given a board, this should provide guesses on where to fire next
-class Guesser(AbstractAI):
+class guesserBot(AbstractAI):
 	def __init__(self, boardInterface):
 		self.boardInterface = boardInterface
 

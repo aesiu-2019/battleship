@@ -1,7 +1,6 @@
 from playBoard import PlayBoard, Appearance
 from random import randint
 
-
 # given a board, this should provide guesses on where to fire next
 class BoardInterface:
 	def __init__(self, playBoard):

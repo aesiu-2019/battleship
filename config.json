@@ -1,0 +1,8 @@
+{
+	"player1Name": "dumberGuessBot",
+	"player2Name": "dumberGuessBot",
+	"battleshipSizes": [5, 4, 3, 3, 2],
+	"rowCount": 50,
+	"colCount": 8,
+	"totalGameCount": 10
+}

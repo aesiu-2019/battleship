@@ -1,13 +1,17 @@
 from playBoard import PlayBoard, Appearance, OpposingState
 from boardValidator import BoardValidator
-from guesser import Guesser
 from enemyBoard import BoardInterface
 import subprocess as sp
 import importlib
+import json
+import argparse
 
 # managers interactions with the user as well as the base flow of the game
 
-def printPlayerView(playerBoard, enemyBoard):
+
+def printPlayerView(isHuman, playerBoard, enemyBoard):
+	if (not isHuman):
+		return
 	enemyBoard.printOpposingBoard()
 	print(str(enemyBoard.activeShips) + " ship pieces remaining")
 	print("-------------------------------")
@@ -43,12 +47,13 @@ def exportGuessHistory(playBoard, file):
 		file.write(str(guess[0]) + "," + str(guess[1]) + "," + result + "\n")
 	file.write("\n")
 
-def performAIGuess(boardInterface):
+def performAIGuess(board, aiName):
+	boardInterface = BoardInterface(board)
+	module = importlib.import_module(aiName)
+	class_ = getattr(module, aiName)
 	while (not boardInterface.hasGuessBeenMade()):
 		# update with reflection to pull other AI names
 		try:
-			module = importlib.import_module("guesser")
-			class_ = getattr(module, "Guesser")
 			ai = class_(boardInterface)
 			ai.makeGuess()
 		except IOError as err:
@@ -56,19 +61,7 @@ def performAIGuess(boardInterface):
 		if (not boardInterface.hasGuessBeenMade()):
 			print("The AI has failed to make a guess")
 
-e = PlayBoard(None)
-p = PlayBoard("input.board")
-validator = BoardValidator(p)
-if (not validator.validate()):
-	print("GIVEN BOARD IS NOT VALID")
-	quit()
-validator = BoardValidator(e)
-if (not validator.validate()):
-	print("OPPOSING BOARD IS NOT VALID, EVALUATE GENERATION LOGIC")
-	e.printSelfBoard()
-	quit()
-printPlayerView(p, e)
-while (e.activeShips > 0 and p.activeShips > 0):
+def playerAction(p, e):
 	result = None
 	while result == None:
 		try:
@@ -95,19 +88,103 @@ while (e.activeShips > 0 and p.activeShips > 0):
 			break
 		except IOError as err:
 			print("Error with guess: " + str(err))
-	boardInterface = BoardInterface(p)
-	performAIGuess(boardInterface)
 
-	sp.call('clear',shell=True)
-	if (e.getAppearance(e.lastGuessRow, e.lastGuessCol) == Appearance.MISS):
-		print("MISS!")
-	else:
-		print("HIT!")
-	printPlayerView(p, e)
-if (e.activeShips == 0):
-	print("YOU WIN")
+
+def getPlayerName(playerNum):
+	print ("player " + str(playerNum) + " will be: ")
+	playerClass = input()
+	return createPlayer(playerNum, playerClass)
+
+def createPlayer(playerNum, playerClass):
+	if (playerNum == 1 and not playerClass.upper().endswith("BOT")):
+		return None
+	try:
+		module = importlib.import_module(playerClass)
+		class_ = getattr(module, playerClass)	
+	except Exception as err:
+		print ("player " + str(playerNum) + " did not receive a valid class")
+		raise err
+	return playerClass
+
+def printIfHuman(isHuman, message):
+	if isHuman:
+		print (message)
+
+def fetchDefaultConfigs(fileName):
+	with open(fileName) as json_file:
+		data = json.load(json_file)
+		return data
+
+winCount = 0
+lossCount = 0
+
+data = fetchDefaultConfigs("config.json")
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--player1Name', default = None, help='The name of the player (AI names should end with "bot")')
+parser.add_argument('--player2Name',  default = None, help='The name of the opposing AI (should end with "bot")')
+args = parser.parse_args()
+
+
+PlayBoard.battleshipSizes = data['battleshipSizes'] 
+PlayBoard.rowCount = data['rowCount']
+PlayBoard.colCount = data['colCount']
+player1Name = None
+if (args.player1Name is None):
+	player1Name = data['player1Name']
 else:
-	print("YOU LOSE")
+	player1Name = args.player1Name
+
+player1Class = createPlayer(1, player1Name)
+
+player2Name = None
+if (args.player2Name is None):
+	player2Name = data['player2Name']
+else:
+	player2Name = args.player2Name
+
+player2Class = createPlayer(1, player2Name)
+
+
+isHuman = (player1Class is None)
+for c in range(data["totalGameCount"]):
+	e = PlayBoard(None)
+	p = PlayBoard(None)
+	validator = BoardValidator(p)
+	if (not validator.validate()):
+		print("GIVEN BOARD IS NOT VALID")
+		quit()
+	validator = BoardValidator(e)
+	if (not validator.validate()):
+		print("OPPOSING BOARD IS NOT VALID, EVALUATE GENERATION LOGIC")
+		e.printSelfBoard()
+		quit()
+	printPlayerView(isHuman ,p, e)
+	while (e.activeShips > 0 and p.activeShips > 0):
+		if (isHuman):
+			playerAction(p, e)
+		else:
+			performAIGuess(e, player1Class)
+
+		performAIGuess(p, player2Class)
+
+		if (isHuman):
+			sp.call('clear',shell=True)
+		if (e.getAppearance(e.lastGuessRow, e.lastGuessCol) == Appearance.MISS):
+			printIfHuman(isHuman, "MISS!")
+		else:
+			printIfHuman(isHuman, "HIT!")
+		if (isHuman):
+			printPlayerView(isHuman, p, e)
+	if (e.activeShips == 0):
+		printIfHuman(isHuman, "YOU WIN")
+		winCount += 1
+	else:
+		printIfHuman(isHuman, "YOU LOSE")
+		lossCount += 1
+
+print (str(winCount) + " is how much you won")
+print (str(lossCount) + " is how much you lost")
 
 # at the end of the game, put down some stats.  Maybe useful.  Should be in a db but overkill is a thing
 # analyzing the guesses made by the computer
