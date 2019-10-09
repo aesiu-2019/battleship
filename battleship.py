@@ -1,6 +1,7 @@
 from playBoard import PlayBoard, Appearance, OpposingState
 from boardValidator import BoardValidator
 from enemyBoard import BoardInterface
+from ruleSet import RuleSet
 import subprocess as sp
 import importlib
 import json
@@ -22,11 +23,11 @@ def interpretGuess(guess):
 	firstChar = guess[0].upper()
 	# ascii A is 65 => col 0
 	column = ord(firstChar) - 65
-	if (column < 0 or column > PlayBoard.rowCount - 1):
+	if (column < 0 or column > RuleSet.rowCount - 1):
 		raise IOError("INPUT ERROR ON COLUMN " + firstChar)
 	secondNum = guess[1:]
 	row = int(secondNum) - 1
-	if (row < 0 or row > PlayBoard.colCount - 1):
+	if (row < 0 or row > RuleSet.colCount - 1):
 		raise IOError("INPUT ERROR ON ROW " + secondNum)
 	return [row, column]
 
@@ -76,10 +77,6 @@ def playerAction(p, e):
 			elif (guessedCoordinates == "LOSE"):
 				p.nuke()
 				break
-			elif (guessedCoordinates == "ANY"):
-				# make the AI guess for you
-				# TODO: backfill
-				pass
 			else:
 				guess = interpretGuess(guessedCoordinates)
 			
@@ -114,16 +111,14 @@ winCount = 0
 lossCount = 0
 
 data = fetchDefaultConfigs("config.json")
+# init the rule set using config.json
+RuleSet(data)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--player1Name', default = None, help='The name of the player (AI names should end with "bot")')
 parser.add_argument('--player2Name',  default = None, help='The name of the opposing AI (should end with "bot")')
 args = parser.parse_args()
 
-
-PlayBoard.battleshipSizes = data['battleshipSizes'] 
-PlayBoard.rowCount = data['rowCount']
-PlayBoard.colCount = data['colCount']
 player1Name = None
 if (args.player1Name is None):
 	player1Name = data['player1Name']
@@ -138,13 +133,17 @@ if (args.player2Name is None):
 else:
 	player2Name = args.player2Name
 
+inputBoard = None
+if ("inputBoard" in data):
+	inputBoard = data["inputBoard"]
+
 player2Class = createPlayer(1, player2Name)
 
 
 isHuman = (player1Class is None)
 for c in range(data["totalGameCount"]):
 	e = PlayBoard(None)
-	p = PlayBoard(None)
+	p = PlayBoard(inputBoard)
 	validator = BoardValidator(p)
 	if (not validator.validate()):
 		print("GIVEN BOARD IS NOT VALID")
@@ -155,6 +154,7 @@ for c in range(data["totalGameCount"]):
 		e.printSelfBoard()
 		quit()
 	printPlayerView(isHuman ,p, e)
+	# main play loop
 	while (e.activeShips > 0 and p.activeShips > 0):
 		if (isHuman):
 			playerAction(p, e)

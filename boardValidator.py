@@ -1,19 +1,20 @@
 from playBoard import PlayBoard, SelfState
 from copy import copy, deepcopy
+from ruleSet import RuleSet
 
 
 # used to validate that a given board has valid ship placement
 class BoardValidator:
 	def __init__(self, playBoard):
 		self.board = playBoard.board
-		self.battleshipSizes = playBoard.battleshipSizes
+		self.battleshipSizes = RuleSet.battleshipSizes
 
 	def validate(self):
 		totalShips = 0
 		for ship in self.battleshipSizes:
 			totalShips = totalShips + ship
-		for i in range(PlayBoard.rowCount):
-			for j in range(PlayBoard.colCount):
+		for i in range(RuleSet.rowCount):
+			for j in range(RuleSet.colCount):
 				if (self.board[i][j] == SelfState.SHIP):
 					totalShips = totalShips - 1
 		if (totalShips != 0):
@@ -26,8 +27,8 @@ class BoardValidator:
 	def isValid(self, workingBoard, shipArray):
 		if (self.isEmpty(workingBoard) and len(shipArray) == 0):
 			return True
-		for i in range(PlayBoard.rowCount):
-			for j in range(PlayBoard.colCount):
+		for i in range(RuleSet.rowCount):
+			for j in range(RuleSet.colCount):
 				if (workingBoard[i][j] == SelfState.SHIP):
 					for ship in list(set(shipArray)):
 						if (self.attemptShipPlacement(workingBoard, shipArray, ship, i, j, 0)
@@ -51,7 +52,7 @@ class BoardValidator:
 
 	def canShipFit(self, workingBoard, ship, row, column, direction):
 		for i in range(ship):
-			if (column >= PlayBoard.colCount or row >= PlayBoard.rowCount):
+			if (column >= RuleSet.colCount or row >= RuleSet.rowCount):
 				return False
 			if (workingBoard[row][column] == SelfState.MISS):
 				return False
@@ -62,8 +63,8 @@ class BoardValidator:
 		return True
 				
 	def isEmpty(self, workingBoard):
-		for i in range(PlayBoard.rowCount):
-			for j in range(PlayBoard.colCount):
+		for i in range(RuleSet.rowCount):
+			for j in range(RuleSet.colCount):
 				if workingBoard[i][j] == SelfState.SHIP:
 					return False
 		return True

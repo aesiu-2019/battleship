@@ -1,5 +1,6 @@
 from playBoard import PlayBoard, Appearance
 from random import randint
+from ruleSet import RuleSet
 
 # given a board, this should provide guesses on where to fire next
 class BoardInterface:
@@ -13,10 +14,9 @@ class BoardInterface:
 		self.lastHitCol = playBoard.lastHitCol
 		self.lastGuessRow = playBoard.lastGuessRow
 		self.lastGuessCol = playBoard.lastGuessCol
-		self.battleshipSizes = playBoard.battleshipSizes
-		for i in range(PlayBoard.rowCount):
+		for i in range(RuleSet.rowCount):
 			row = []
-			for j in range(PlayBoard.colCount):
+			for j in range(RuleSet.colCount):
 				row.append(playBoard.getAppearance(i, j))
 			self.board.append(row)
 
@@ -30,7 +30,7 @@ class BoardInterface:
 		return self.board
 
 	def getBoardAppearance(self, row, column):
-		if (row > PlayBoard.rowCount - 1 or column > PlayBoard.colCount -1 or row < 0 or column < 0):
+		if (row > RuleSet.rowCount - 1 or column > RuleSet.colCount -1 or row < 0 or column < 0):
 			raise IOError("Element " + str(row) + " , " + str(column) + " is out of bounds of the board")
 		return self.board[row][column]
 
@@ -41,7 +41,7 @@ class BoardInterface:
 		return self.guessMade
 
 	def getShipSizes(self):
-		return self.battleshipSizes
+		return RuleSet.battleshipSizes
 
 	def postGuess(self, row, column):
 		if (self.guessMade):

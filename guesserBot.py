@@ -1,7 +1,7 @@
 from playBoard import PlayBoard, Appearance
 from AbstractAI import AbstractAI
 from random import randint
-
+from ruleSet import RuleSet
 
 # given a board, this should provide guesses on where to fire next
 class guesserBot(AbstractAI):
@@ -30,8 +30,8 @@ class guesserBot(AbstractAI):
 
 		# otherwise random.  Will probably be the base case forever
 		while(True):
-			col = randint(0, PlayBoard.rowCount -1)
-			row = randint(0, PlayBoard.colCount -1)
+			col = randint(0, RuleSet.rowCount -1)
+			row = randint(0, RuleSet.colCount -1)
 			if (self.boardInterface.getBoardAppearance(row,col) != Appearance.UNKNOWN):
 				continue
 			return [row, col]
@@ -47,6 +47,9 @@ class guesserBot(AbstractAI):
 				continue
 			row = int(entry[0])
 			col = int(entry[1])
+			if (row >= RuleSet.rowCount or col >= RuleSet.colCount):
+				line = f.readline()
+				continue
 			self.attemptHistory[row][col] += 1
 			if ("HIT" in entry[2]):
 				self.hitHistory[row][col] += 1
@@ -56,8 +59,8 @@ class guesserBot(AbstractAI):
 		self.initHistory("postmortem.guess")
 		bestOptions = []
 		highestSuccess = 0.0
-		for i in range(PlayBoard.rowCount):
-			for j in range(PlayBoard.colCount):
+		for i in range(RuleSet.rowCount):
+			for j in range(RuleSet.colCount):
 				if (self.boardInterface.getBoardAppearance(i,j) != Appearance.UNKNOWN):
 					# not even a possible guess. skip
 					continue
@@ -77,10 +80,10 @@ class guesserBot(AbstractAI):
 	def initHistoryBoards(self):
 		self.attemptHistory = []
 		self.hitHistory = []
-		for i in range(PlayBoard.rowCount):
+		for i in range(RuleSet.rowCount):
 			attemptRow = []
 			hitRow = []
-			for j in range(PlayBoard.colCount):
+			for j in range(RuleSet.colCount):
 				attemptRow.append(0.0)
 				hitRow.append(0.0)
 			self.attemptHistory.append(attemptRow)
@@ -140,7 +143,7 @@ class guesserBot(AbstractAI):
 			set.append([row, col])
 
 	def getAppearance(self, row, column):
-		if (row > PlayBoard.rowCount - 1 or column > PlayBoard.colCount -1 or row < 0 or column < 0):
+		if (row > RuleSet.rowCount - 1 or column > RuleSet.colCount -1 or row < 0 or column < 0):
 			## everything off the border is functionally a miss
 			return Appearance.MISS
 		return self.boardInterface.getBoardAppearance(row,column)

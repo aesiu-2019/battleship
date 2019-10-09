@@ -1,6 +1,7 @@
 from enum import Enum
 from random import randint
 from copy import copy, deepcopy
+from ruleSet import RuleSet
 
 class OpposingState(Enum):
 	UNKNOWN = 1
@@ -19,9 +20,6 @@ class Appearance(Enum):
 # Managers the actual boards and state of the boards
 class PlayBoard:
 # UPDATE THESE VALUES TO CHANGE BASIC GAME DIMENSIONS
-	battleshipSizes = [5, 4, 3, 3, 2]
-	rowCount = 10
-	colCount = 10
 
 	def __init__(self, sourceFile):
 		# the actual board of ships
@@ -39,9 +37,9 @@ class PlayBoard:
 		self.lastHitRow = -1
 		self.lastHitCol = -1
 
-		for i in range(self.rowCount):
+		for i in range(RuleSet.rowCount):
 			row = []
-			for j in range(self.colCount):
+			for j in range(RuleSet.colCount):
 				row.append(OpposingState.UNKNOWN)
 			self.guessedBoard.append(row)
 		if (sourceFile == None):
@@ -51,11 +49,11 @@ class PlayBoard:
 		f = open(sourceFile)
 		# first row should just be markers
 		f.readline()
-		for i in range(self.rowCount):
+		for i in range(RuleSet.rowCount):
 			inputRow = f.readline()
 			row = []
 			self.board.append(row)
-			for j in range(self.colCount):
+			for j in range(RuleSet.colCount):
 				# offset of 4 to reach the first coordinate, then 2 chars for each
 				elementIndex = (j*2) + 4
 				if (len(inputRow) > elementIndex and inputRow[elementIndex] == "X"):
@@ -67,23 +65,23 @@ class PlayBoard:
 
 
 	def generateRandomBaord(self):
-		for i in range(self.rowCount):
+		for i in range(RuleSet.rowCount):
 			row = []
-			for j in range(self.colCount):
+			for j in range(RuleSet.colCount):
 				row.append(SelfState.MISS)
 			self.board.append(row)
 
-		for ship in self.battleshipSizes:
+		for ship in RuleSet.battleshipSizes:
 			while True:
 				direction = randint(0,1)
 				# 0 will be horizontal, 1 will be vertical
-				colStart = randint(0, self.colCount - 1)
-				rowStart = randint(0, self.rowCount - 1)
+				colStart = randint(0, RuleSet.colCount - 1)
+				rowStart = randint(0, RuleSet.rowCount - 1)
 				if (direction == 0):
 					# horizontal, so the row must start at least a little before the edge
-					colStart = randint(0, self.colCount - ship - 1)
+					colStart = randint(0, RuleSet.colCount - ship - 1)
 				else:
-					rowStart = randint(0, self.rowCount - ship - 1)
+					rowStart = randint(0, RuleSet.rowCount - ship - 1)
 				if(self.validShipPlacement(rowStart, colStart, ship, direction)):
 					## ship can be placed, so let's place it
 					self.placeShip(rowStart, colStart, ship, direction)
@@ -126,12 +124,12 @@ class PlayBoard:
 	def printBoard(self, asSelf):
 		line = "  |"
 		
-		for i in range(self.rowCount):
+		for i in range(RuleSet.rowCount):
 			line = line + " " +chr(65 + i)
 		print(line)
-		for i in range(self.rowCount):
+		for i in range(RuleSet.rowCount):
 			line = str(i + 1).zfill(2) + "|"
-			for j in range(self.colCount):
+			for j in range(RuleSet.colCount):
 				char = self.getRepresentingChar(i, j, asSelf)
 				
 				line = line + " " + char
@@ -177,8 +175,8 @@ class PlayBoard:
 
 	def nuke(self):
 		# only used for debugging and ending games
-		for i in range(self.rowCount):
-			for j in range(self.colCount):
+		for i in range(RuleSet.rowCount):
+			for j in range(RuleSet.colCount):
 				try: 
 					self.guess(i,j)
 				except IOError as err:
