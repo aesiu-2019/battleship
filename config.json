@@ -1,9 +1,8 @@
 {
-	"player1Name": "dumberGuessBot",
+	"player1Name": "ss",
 	"player2Name": "guesserBot",
-	"battleshipSizes": [5, 4, 3, 3, 2],
+	"battleshipSizes": [5, 4, 3, 3, 2, 2, 2],
 	"rowCount": 10,
 	"colCount": 10,
-	"totalGameCount": 10,
-	"inputBoard": "input.board"
+	"totalGameCount": 1000
 }

@@ -171,6 +171,11 @@ for c in range(data["totalGameCount"]):
 			printIfHuman(isHuman, "HIT!")
 		if (isHuman):
 			printPlayerView(isHuman, p, e)
+	if (data["totalGameCount"] > 100):
+		if (e.activeShips == 0):
+			printIfHuman(True, "YOU WIN")
+		else:
+			printIfHuman(True, "YOU LOSE")
 	if (e.activeShips == 0):
 		printIfHuman(isHuman, "YOU WIN")
 		winCount += 1
