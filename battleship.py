@@ -90,11 +90,6 @@ def playerAction(p, e):
 			print("Error with guess: " + str(err))
 
 
-def getPlayerName(playerNum):
-	print ("player " + str(playerNum) + " will be: ")
-	playerClass = input()
-	return createPlayer(playerNum, playerClass)
-
 def createPlayer(playerNum, playerClass):
 	if (playerNum == 1 and not playerClass.upper().endswith("BOT")):
 		return None
