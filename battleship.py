@@ -1,7 +1,9 @@
 from playBoard import PlayBoard, Appearance, OpposingState
 from boardValidator import BoardValidator
 from guesser import Guesser
+from enemyBoard import BoardInterface
 import subprocess as sp
+import importlib
 
 # managers interactions with the user as well as the base flow of the game
 
@@ -41,6 +43,18 @@ def exportGuessHistory(playBoard, file):
 		file.write(str(guess[0]) + "," + str(guess[1]) + "," + result + "\n")
 	file.write("\n")
 
+def performAIGuess(boardInterface):
+	while (not boardInterface.hasGuessBeenMade()):
+		# update with reflection to pull other AI names
+		try:
+			module = importlib.import_module("guesser")
+			class_ = getattr(module, "Guesser")
+			ai = class_(boardInterface)
+			ai.makeGuess()
+		except IOError as err:
+			print("The AI attempted multiple gueses, the first will be the only considered")
+		if (not boardInterface.hasGuessBeenMade()):
+			print("The AI has failed to make a guess")
 
 e = PlayBoard(None)
 p = PlayBoard("input.board")
@@ -71,8 +85,8 @@ while (e.activeShips > 0 and p.activeShips > 0):
 				break
 			elif (guessedCoordinates == "ANY"):
 				# make the AI guess for you
-				guesser = Guesser(e)
-				guess = guesser.aiGuess()
+				# TODO: backfill
+				pass
 			else:
 				guess = interpretGuess(guessedCoordinates)
 			
@@ -81,9 +95,9 @@ while (e.activeShips > 0 and p.activeShips > 0):
 			break
 		except IOError as err:
 			print("Error with guess: " + str(err))
-	guesser = Guesser(p)
-	guess = guesser.aiGuess()
-	p.guess(guess[0], guess[1])
+	boardInterface = BoardInterface(p)
+	performAIGuess(boardInterface)
+
 	sp.call('clear',shell=True)
 	if (e.getAppearance(e.lastGuessRow, e.lastGuessCol) == Appearance.MISS):
 		print("MISS!")

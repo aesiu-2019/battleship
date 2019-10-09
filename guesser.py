@@ -1,20 +1,41 @@
 from playBoard import PlayBoard, Appearance
+from enemyBoard import BoardInterface
+from AbstractAI import AbstractAI
 from random import randint
 
 
 # given a board, this should provide guesses on where to fire next
-class Guesser:
-	def __init__(self, playBoard):
-		self.activeShips = playBoard.activeShips
-		self.board = []
-		self.lastHitRow = playBoard.lastHitRow
-		self.lastHitCol = playBoard.lastHitCol
-		self.battleshipSizes = playBoard.battleshipSizes
-		for i in range(PlayBoard.rowCount):
-			row = []
-			for j in range(PlayBoard.colCount):
-				row.append(playBoard.getAppearance(i, j))
-			self.board.append(row)
+class Guesser(AbstractAI):
+	def __init__(self, boardInterface):
+		self.boardInterface = boardInterface
+
+	def makeGuess(self):
+		coordinates = self.getReasonableCoordinates()
+		self.boardInterface.postGuess(coordinates[0], coordinates[1])
+
+	def getReasonableCoordinates(self):
+		## actual Guessing code
+		if (self.boardInterface.getRemainingShips == 0):
+			# nothing to guess, might have been a nuke
+			return
+		# basic rule is to continue attacking ships you found
+		continuedOptions = self.getContinuedAssaultOptions()
+		if (len(continuedOptions) != 0):
+			return continuedOptions[randint(0, len(continuedOptions) - 1)]
+
+		# this is silly but eh
+		if (randint(0, 10) == 0):
+			# based on previous history, find the most likely place we found a hit in the past and go for it
+			mostSuccessfulOptions = self.getMostSuccessfulOptions()
+			return mostSuccessfulOptions[randint(0, len(mostSuccessfulOptions) - 1)]
+
+		# otherwise random.  Will probably be the base case forever
+		while(True):
+			col = randint(0, PlayBoard.rowCount -1)
+			row = randint(0, PlayBoard.colCount -1)
+			if (self.boardInterface.getBoardAppearance(row,col) != Appearance.UNKNOWN):
+				continue
+			return [row, col]
 
 	def initHistory(self, sourceFile):
 		self.initHistoryBoards()
@@ -38,7 +59,7 @@ class Guesser:
 		highestSuccess = 0.0
 		for i in range(PlayBoard.rowCount):
 			for j in range(PlayBoard.colCount):
-				if (self.board[i][j] != Appearance.UNKNOWN):
+				if (self.boardInterface.getBoardAppearance(i,j) != Appearance.UNKNOWN):
 					# not even a possible guess. skip
 					continue
 				success = self.getSuccessRate(i, j)
@@ -67,33 +88,11 @@ class Guesser:
 			self.hitHistory.append(hitRow)
 
 
-	def aiGuess(self):
-		if (self.activeShips == 0):
-			# nothing to guess, might have been a nuke
-			return
-		# basic rule is to continue attacking ships you found
-		continuedOptions = self.getContinuedAssaultOptions()
-		if (len(continuedOptions) != 0):
-			return continuedOptions[randint(0, len(continuedOptions) - 1)]
-
-		# this is silly but eh
-		if (randint(0, 10) == 0):
-			# based on previous history, find the most likely place we found a hit in the past and go for it
-			mostSuccessfulOptions = self.getMostSuccessfulOptions()
-			return mostSuccessfulOptions[randint(0, len(mostSuccessfulOptions) - 1)]
-
-		# otherwise random.  Will probably be the base case forever
-		while(True):
-			col = randint(0, PlayBoard.rowCount -1)
-			row = randint(0, PlayBoard.colCount -1)
-			if (self.board[row][col] != Appearance.UNKNOWN):
-				continue
-			return [row, col]
-
 	def getContinuedAssaultOptions(self):
-		row = self.lastHitRow
-		col = self.lastHitCol
-		if (self.lastHitRow == -1 or self.lastHitCol == -1):
+		lastHit = self.boardInterface.getLastHit()
+		row = lastHit[0]
+		col = lastHit[1]
+		if (row == -1 or col == -1):
 			return []
 		returnSet = []
 		if (self.getAppearance(row + 1, col) == Appearance.SUNK or self.getAppearance(row - 1, col) == Appearance.SUNK):
@@ -107,7 +106,7 @@ class Guesser:
 			while (self.getAppearance(endRow + 1, col) == Appearance.SUNK):
 				endRow += 1
 			# silly heuristic but if we've already covered the largest ship there's no point in guessing more
-			if (endRow - startRow  + 1 == self.battleshipSizes[0]):
+			if (endRow - startRow  + 1 == self.boardInterface.getShipSizes()[0]):
 				return []
 			
 			self.appendIfPotentialHit(startRow - 1, col, returnSet)
@@ -122,7 +121,7 @@ class Guesser:
 			while (self.getAppearance(row, endCol + 1) == Appearance.SUNK):
 				endCol = endCol + 1
 			# silly heuristic but if we've already covered the largest ship there's no point in guessing more
-			if (endCol - startCol + 1 == self.battleshipSizes[0]):
+			if (endCol - startCol  + 1 == self.boardInterface.getShipSizes()[0]):
 				return []
 			# see if either end is a potential hit
 			self.appendIfPotentialHit(row, startCol - 1, returnSet)
@@ -145,6 +144,6 @@ class Guesser:
 		if (row > PlayBoard.rowCount - 1 or column > PlayBoard.colCount -1 or row < 0 or column < 0):
 			## everything off the border is functionally a miss
 			return Appearance.MISS
-		return self.board[row][column]
+		return self.boardInterface.getBoardAppearance(row,column)
 	
 	
